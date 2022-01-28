@@ -1,4 +1,4 @@
-from .chain import Chain
+from .chain import Chain, Wallet
 from . import networking
 from . import crypto_funcs as cf
 
@@ -23,6 +23,7 @@ peer = Peer()
 chain = Chain()
 chain.load()
 
+wallet = Wallet(chain, peer)
 
 public = None
 private = None
@@ -50,6 +51,12 @@ while True:
 
     if inp == "keygen":
         public, private = cf.generate_keys()
+        wallet.public = public
+        wallet.private = private
+        wallet.save()
 
+    if inp == "save":
+        chain.save()
+        print(chain.chain)
     if inp == "connect":
         peer.connect(inp.replace("connect ", ""))

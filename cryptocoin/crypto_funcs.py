@@ -6,13 +6,6 @@ import base64
 import json
 
 
-def generate_keys():
-    private_key = RSA.generate(1024)
-    public_key = private_key.publickey()
-
-    return public_key, private_key
-
-
 def encrypt(message, key):
     message = json.dumps(message).encode("utf-8")
     cipher = PKCS1_OAEP.new(key)
@@ -25,7 +18,7 @@ def decrypt(message, key):
     return json.loads(message)
 
 
-def load_key(key):
+def deserialize_key(key):
     key = base64.b64decode(key)
     return RSA.importKey(key)
 
@@ -35,7 +28,24 @@ def serialize_key(key):
     return key
 
 
+def save_key(key):
+    return deserialize_key(key).exportKey("PEM")
+
+
+def load_key(key):
+    return serialize_key(RSA.importKey(key))
+
+
+def generate_keys():
+    private_key = RSA.generate(1024)
+    public_key = private_key.publickey()
+
+    return serialize_key(public_key), serialize_key(private_key)
+
+
 def sign(message, private_key):
+    if type(private_key) == str:
+        private_key = deserialize_key(private_key)
     digest = SHA256.new()
     digest.update(str(message).encode("utf-8"))
     signer = PKCS1_v1_5.new(private_key)
@@ -45,7 +55,8 @@ def sign(message, private_key):
 
 
 def verify(message, sig, key):
-    key = load_key(key)
+    if type(private_key) == str:
+        private_key = deserialize_key(private_key)
     digest = SHA256.new()
     digest.update(str(message).encode("utf-8"))
     verifier = PKCS1_v1_5.new(key)
