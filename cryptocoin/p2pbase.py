@@ -63,7 +63,8 @@ class NodeConnection(threading.Thread):
 
             except Exception as e:
                 self.terminate_flag.set()
-                self.main_node.debug_print(e)
+                self.main_node.debug_print("Exception: " + str(e))
+                raise (e)
 
             time.sleep(0.01)
 
