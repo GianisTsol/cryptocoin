@@ -24,7 +24,7 @@ class Chain:
     def save(self):
         with open("chain.json", "w") as f:
             # dump all except genesis
-            json.dump(self.chain[1:], f, default=lambda x: x.__dict__())
+            json.dump(self.chain[1:], f, default=lambda x: x.dict())
 
     def validate(self):
         prev = -1
@@ -38,15 +38,7 @@ class Chain:
                 return False
         return True
 
-    def new_block(self, b):
-        new = Block(self.chain, b)
-        if not new.valid():
-            return False
-        if new not in self.chain:
-            self.chain.append(new)
-
-    def new_tx(self, t):
-        new = Tx(t)
-        if not new.valid():
-            return False
-        self.pending.append(new)
+    def add_block(self, block):
+        if block.valid():
+            print("block added")
+            self.chain.append(block)

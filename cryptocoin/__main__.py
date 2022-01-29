@@ -1,39 +1,27 @@
-from .chain import Chain, Wallet
-from . import networking
+from .chain import Chain
+from .networking import Network
+from .wallet import Wallet
+from .miner import Miner
 from . import crypto_funcs as cf
-
-
-class Peer(networking.Node):
-    def on_message(self, d):
-        data = d["data"]
-        type = d["type"]
-        if type == "block":
-            chain.new_block(data["block"])
-        elif type == "tx":
-            chain.new_tx(data["tx"])
-        elif type == "sync":
-            if data <= len(chain.chain):
-                self.message("block", chain.chain[data])
-        elif type == "getheight":
-            self.message("height", chain.chain[-1].height)
-
-
-peer = Peer()
 
 chain = Chain()
 chain.load()
 
+peer = Network()
+peer.initialize(chain)
 wallet = Wallet(chain, peer)
-
-public = None
-private = None
+wallet.load()
+miner = Miner(chain, peer)
+miner.public = wallet.public
 
 while True:
     inp = input("> ")
 
     if inp == "mine":
-        chain.mine()
-        peer.message("block", chain[-1])
+        new = miner.mine()
+        peer.message("block", new.dict())
+        chain.add_block(new)
+        print(new)
 
     if inp == "start":
         peer.start()
@@ -43,11 +31,10 @@ while True:
 
     if inp == "save":
         chain.save()
-        print(chain.chain)
     if inp == "chain":
         print(chain.chain)
     if inp == "sync":
-        peer.message("sync", "")
+        peer.message("sync", chain.chain[-1].height)
 
     if inp == "keygen":
         public, private = cf.generate_keys()
@@ -58,5 +45,5 @@ while True:
     if inp == "save":
         chain.save()
         print(chain.chain)
-    if inp == "connect":
-        peer.connect(inp.replace("connect ", ""))
+    if "connect " in inp:
+        peer.connect_to(inp.replace("connect ", ""))

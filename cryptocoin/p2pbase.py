@@ -7,7 +7,6 @@ import threading
 import time
 import uuid
 
-from . import crypto_funcs as cf
 
 msg_del_time = 30
 PORT = 65432
@@ -28,7 +27,6 @@ class NodeConnection(threading.Thread):
         self.buffer = ""
 
         # The id of the connected node
-        self.public_key = cf.load_key(id)
         self.id = id
 
         self.main_node.debug_print("Connection " + self.host + ":" + str(self.port))
@@ -53,7 +51,8 @@ class NodeConnection(threading.Thread):
                 print("node" + self.id + " is dead")
 
             try:
-                message = self.sock.recv(4096)
+                message = self.sock.recv(4096).decode()
+                print(message)
                 if message == "ping":
                     self.last_ping = time.time()
                 else:
@@ -94,7 +93,7 @@ class Node(threading.Thread):
         self.msgs = {}  # hashes of recieved messages
         self.peers = []
 
-        self.id = uuid.uuid4()
+        self.id = str(uuid.uuid4())
 
         self.max_peers = 10
 
@@ -118,10 +117,10 @@ class Node(threading.Thread):
     def network_send(self, message, exc=[]):
         for i in self.nodes_connected:
             if i.host not in exc:
-                i.send(json.dumps(message))
+                i.send(message)
 
     def connect_to(self, host, port=PORT):
-
+        print("connecting to: " + host)
         if not self.check_ip_to_connect(host):
             self.debug_print("connect_to: Cannot connect!!")
             return False
@@ -212,13 +211,13 @@ class Node(threading.Thread):
                 # delete wrong / own ip from peers
                 del self.peers[self.peers.index(i)]
 
-    def message(self, type, data, ex=[]):
+    def message(self, type, data, dta={}, ex=[]):
         # time that the message was sent
-        dict = {"type": type, "data": data}
+        dict = {"type": type, "data": data, **dta}
         if "time" not in dict:
             dict["time"] = str(time.time())
 
-        self.network_send(dict, ex)
+        self.network_send(json.dumps(dict), ex)
 
     def send_peers(self):
         self.message("peers", self.peers)
@@ -231,7 +230,7 @@ class Node(threading.Thread):
 
     def check_expired(self, dta):
         sth = str(dta)
-        msghash = hashlib.md5(sth.encode("utf-8")).hexdigest().decode()
+        msghash = hashlib.md5(sth.encode("utf-8")).hexdigest()
 
         if float(time.time()) - float(dta["time"]) < float(msg_del_time):
             if msghash not in self.msgs:

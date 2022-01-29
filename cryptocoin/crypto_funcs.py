@@ -33,7 +33,8 @@ def save_key(key):
 
 
 def load_key(key):
-    return serialize_key(RSA.importKey(key))
+    key = RSA.importKey(key)
+    return serialize_key(key), serialize_key(key.publickey())
 
 
 def generate_keys():

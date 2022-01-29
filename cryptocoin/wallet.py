@@ -1,4 +1,5 @@
 from .block import Tx
+from . import crypto_funcs as cf
 
 
 class Wallet:
@@ -17,7 +18,7 @@ class Wallet:
 
     def load(self):
         with open("wallet.pem", "rb") as f:
-            self.private = cf.load_key(f.read())
+            self.private, self.public = cf.load_key(f.read())
 
     def new_transaction(self, to, amount, fee):
         # TODO: ADD KEY VERIFICATION

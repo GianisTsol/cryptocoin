@@ -1,13 +1,16 @@
-from .block import BLock, Tx
+from .block import Block, Tx
 from .globals import *
+import time
+import hashlib
 
 
 class Miner:
     def __init__(self, chain, network):
         self.chain = chain
         self.net = network
+        self.public = 0
 
-    def proof_of_work(header, difficulty_bits):
+    def proof_of_work(sel, header, difficulty_bits):
         target = 2 ** (256 - difficulty_bits)
         for nonce in range(MAX_NONCE):
             hash_result = hashlib.sha256(f"{header}{nonce}".encode()).hexdigest()
@@ -18,16 +21,17 @@ class Miner:
         return None, nonce
 
     def coinbase_tx(self, block):
-        rew = block.coinbase()
+        rew = block.get_reward()
 
         tx = Tx(
-            {
+            src={
                 "send": -1,
-                "maount": rew,
+                "amount": rew,
                 "recv": block.author,
                 "fee": 0,
                 "sig": "",
                 "time": block.time,
+                "hash": 0,
             }
         )
 
@@ -38,7 +42,7 @@ class Miner:
         diff = block.prev.diff
 
         lastblocktime = BLOCK_TIME + 1
-        if len(self.chain) > 1:
+        if len(self.chain.chain) > 1:
             lastblocktime = block.prev.time - block.prev.prev.time
 
         if lastblocktime < BLOCK_TIME:
@@ -48,11 +52,11 @@ class Miner:
         return diff
 
     def mine(self):
-        block = Block(self.chain[-1])
+        block = Block(self.chain.chain[-1])
         block.height = block.prev.height + 1
         block.time = time.time()
         block.diff = self.calculate_diff(block)
-
+        block.author = self.public
         block.txs = self.net.pending
         block.txs.append(self.coinbase_tx(block))
 

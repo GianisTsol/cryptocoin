@@ -1,4 +1,5 @@
 from .globals import *
+import hashlib
 
 
 class Tx:
@@ -27,8 +28,8 @@ class Tx:
         return f"{self.send}{self.amount}{self.recv}{self.time}{self.fee}"
 
     def calculate_hash(self):
-        digest = self.header(self)
-        return hashlib.sha256(digest).digest()
+        digest = self.header().encode()
+        return hashlib.sha256(digest).hexdigest()
 
     def valid(self):
         # dont check sig on coinbase
@@ -37,7 +38,7 @@ class Tx:
         else:
             signed = cf.verify(self.sig, self.send)
 
-        return self.hash == self.calculate_hash() and self.amount > self.fee and signed
+        return self.hash == self.calculate_hash() and self.amount >= self.fee and signed
 
     def transfer(self, send, to, amount, fee):
         self.send = send
@@ -52,15 +53,19 @@ class Tx:
     def __hash__(self):
         return self.calculate_hash()
 
-    def __str__(self):
+    def dict(self):
         return {
             "send": self.send,
+            "recv": self.recv,
             "amount": self.amount,
             "fee": self.fee,
             "sig": self.sig,
             "hash": self.hash,
             "time": self.time,
         }
+
+    def __str__(self):
+        return str(self.dict())
 
     def __repr__(self):
         return self.__str__()
@@ -85,7 +90,8 @@ class Block:
     def load(self, s):
         self.height = s["height"]
         self.hash = s["hash"]
-        self.prev = s["prev"]
+        if not self.prev:
+            self.prev = s["prev"]
         self.nonce = s["nonce"]
         self.diff = s["diff"]
         self.time = s["time"]
@@ -95,7 +101,6 @@ class Block:
         for i in s["txs"]:
             self.txs.append(Tx(i))
 
-    @staticmethod
     def header(self):
         return f"{self.prev}{self.version}{self.txs_hash()}{self.time}{self.diff}{self.author}{self.nonce}"
 
@@ -104,9 +109,10 @@ class Block:
         for i in self.txs:
             if i.send != -1:
                 rew += i.fee
+        return rew
 
     def valid(self):
-        header = self.header(self)
+        header = self.header()
 
         if not self.height == self.prev.height + 1:
             return False
@@ -117,6 +123,7 @@ class Block:
 
         for i in self.txs:
             if not i.valid():
+                print("Invalid TX")
                 return False
 
         coinbase = False
@@ -132,18 +139,18 @@ class Block:
 
     def txs_hash(self):
         if len(self.txs) > 0:
-            txs = int("".join([i.hash for i in self.txs]), 16)
+            txs = "".join([i.hash for i in self.txs]).encode()
         else:
             txs = b""
         txs = hashlib.sha256(txs).hexdigest()
         return txs
 
-    def __dict__(self):
+    def dict(self):
         return {
             "height": self.height,
             "hash": self.hash,
             "prev": self.prev.hash,
-            "txs": self.txs,
+            "txs": [i.dict() for i in self.txs],
             "nonce": self.nonce,
             "diff": self.diff,
             "time": self.time,
