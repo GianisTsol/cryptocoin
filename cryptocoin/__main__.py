@@ -12,7 +12,7 @@ peer.initialize(chain)
 wallet = Wallet(chain, peer)
 wallet.load()
 miner = Miner(chain, peer)
-miner.public = wallet.public
+miner.address = wallet.public
 
 while True:
     inp = input("> ")
@@ -31,8 +31,10 @@ while True:
 
     if inp == "save":
         chain.save()
+
     if inp == "chain":
         print(chain.chain)
+
     if inp == "sync":
         peer.message("sync", chain.chain[-1].height)
 
@@ -45,5 +47,20 @@ while True:
     if inp == "save":
         chain.save()
         print(chain.chain)
+
     if "connect " in inp:
         peer.connect_to(inp.replace("connect ", ""))
+
+    if inp == "wallet":
+        print(f"wallet: {wallet.address}")
+        print(f"balance: {wallet.get_balance(wallet.public)/1000} Coins")
+
+    if inp == "tx":
+        to = input("reciever: ")
+        try:
+            amount = int(input("Amount (/1000): "))
+        except ValueError:
+            print("invalid amount ;)")
+        fee = int(input("Fee: "))
+        wallet.new_transaction(to, amount, fee)
+        wallet.publish_txs()

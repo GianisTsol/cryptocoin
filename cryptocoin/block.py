@@ -1,5 +1,6 @@
 from .globals import *
 import hashlib
+import math
 
 
 class Tx:
@@ -105,7 +106,8 @@ class Block:
         return f"{self.prev}{self.version}{self.txs_hash()}{self.time}{self.diff}{self.author}{self.nonce}"
 
     def get_reward(self):
-        rew = 0  # TODO: ADD BLOCK REWARD SYSTEM AND SUPPLY LIMIT
+        rew = math.floor(10 ** 4 - self.height / 10 ** 3)
+        print(rew)
         for i in self.txs:
             if i.send != -1:
                 rew += i.fee

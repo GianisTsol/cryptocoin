@@ -2,3 +2,5 @@ __pycache_/*
 __pycache__
 .env
 env/
+chain.json
+wallet.pem

@@ -1,6 +1,5 @@
 VERSION = 1
 
-
 MAX_NONCE = 2 ** 32  # 4 billion
 BLOCK_TIME = 4 * 60  # 4 minutes
 
@@ -15,3 +14,7 @@ GENESIS = {
     "version": 0,
     "author": "x",
 }
+
+##########################
+
+MINER_THREADS = 16
