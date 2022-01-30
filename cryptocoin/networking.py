@@ -8,6 +8,9 @@ class Network(p2pbase.Node):
         self.chain = chain
         self.height = len(chain.chain) - 1
 
+    def on_connect(self, node):
+        node.send({"type": "height", "data": len(self.chain.chain)})
+
     def on_message(self, d):
         data = d["data"]
         type = d["type"]
