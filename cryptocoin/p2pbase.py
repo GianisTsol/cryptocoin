@@ -52,7 +52,6 @@ class NodeConnection(threading.Thread):
 
             try:
                 message = self.sock.recv(4096).decode()
-                print(message)
                 if message == "ping":
                     self.last_ping = time.time()
                 else:

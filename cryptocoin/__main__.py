@@ -11,13 +11,13 @@ peer = Network()
 peer.initialize(chain)
 wallet = Wallet(chain, peer)
 wallet.load()
-miner = Miner(chain, peer)
-miner.address = wallet.public
 
 while True:
     inp = input("> ")
 
     if inp == "mine":
+        miner = Miner(chain, peer)
+        miner.address = wallet.public
         new = miner.mine()
         peer.message("block", new.dict())
         chain.add_block(new)

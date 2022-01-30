@@ -106,8 +106,7 @@ class Block:
         return f"{self.prev}{self.version}{self.txs_hash()}{self.time}{self.diff}{self.author}{self.nonce}"
 
     def get_reward(self):
-        rew = math.floor(10 ** 4 - self.height / 10 ** 3)
-        print(rew)
+        rew = math.floor(10 ** 4 - self.height / 11 ** 3)
         for i in self.txs:
             if i.send != -1:
                 rew += i.fee
