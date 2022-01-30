@@ -1,5 +1,6 @@
 from . import p2pbase
 from .block import Block, Tx
+import json
 
 
 class Network(p2pbase.Node):
@@ -9,7 +10,7 @@ class Network(p2pbase.Node):
         self.height = len(chain.chain) - 1
 
     def on_connect(self, node):
-        node.send({"type": "height", "data": len(self.chain.chain)})
+        node.send(json.dumps({"type": "height", "data": len(self.chain.chain)}))
 
     def on_message(self, d):
         data = d["data"]
