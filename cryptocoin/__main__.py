@@ -12,6 +12,8 @@ peer.initialize(chain)
 wallet = Wallet(chain, peer)
 wallet.load()
 
+# peer.start()
+
 while True:
     inp = input("> ")
 
@@ -21,7 +23,7 @@ while True:
         new = miner.mine()
         peer.message("block", new.dict())
         chain.add_block(new)
-        print(new)
+        print(new.dict())
 
     if inp == "start":
         peer.start()
@@ -34,9 +36,10 @@ while True:
 
     if inp == "chain":
         print(chain.chain)
+        print(chain.validate())
 
     if inp == "sync":
-        peer.message("sync", chain.chain[-1].height)
+        peer.message("getheight", chain.chain[-1].height)
 
     if inp == "keygen":
         public, private = cf.generate_keys()

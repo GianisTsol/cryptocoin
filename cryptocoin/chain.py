@@ -10,16 +10,17 @@ from .globals import *
 class Chain:
     def __init__(self):
         self.chain = []
+        self.height = 0
         self.genesis()
 
     def genesis(self):
-        self.chain.append(Block(self.chain, GENESIS))
+        self.chain.append(Block(None, GENESIS))
 
     def load(self):
         with open("chain.json", "r") as f:
             chain = json.load(f)
             for i in chain:
-                self.chain.append(Block(self.chain[-1], i))
+                self.add_block(Block(self.chain[-1], i))
 
     def save(self):
         with open("chain.json", "w") as f:
@@ -27,8 +28,9 @@ class Chain:
             json.dump(self.chain[1:], f, default=lambda x: x.dict())
 
     def validate(self):
-        prev = -1
-        for i in self.chain:
+        prev = 0
+        # genesis block has no valid prev objand cause errors
+        for i in self.chain[1:]:
             prev += 1
             if i.height != prev:
                 print("HEIGHT INCONSISTANCY CHAIN INVALID")
@@ -40,5 +42,5 @@ class Chain:
 
     def add_block(self, block):
         if block.valid():
-            print("block added")
+            self.height = block.height
             self.chain.append(block)

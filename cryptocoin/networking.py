@@ -1,26 +1,31 @@
-from . import p2pbase
+from pythonp2p import Node
 from .block import Block, Tx
 import json
+import time
 
 
-class Network(p2pbase.Node):
+class Network(Node):
     def initialize(self, chain):
         self.pending = []
         self.chain = chain
         self.height = len(chain.chain) - 1
 
     def on_connect(self, node):
-        node.send(json.dumps({"type": "height", "data": len(self.chain.chain)}))
+        self.message("height", self.chain.height)
 
     def on_message(self, d):
-        data = d["data"]
-        type = d["type"]
+        if "data" in d and "type" in d:
+            data = d["data"]
+            type = d["type"]
+        else:
+            return
         if type == "block":
+            print("BLOCK")
             self.new_block(data)
         elif type == "tx":
             self.new_tx(data)
         elif type == "sync":
-            if data < len(self.chain.chain):
+            if 0 < data <= self.chain.chain[-1].height:
                 self.message("block", self.chain.chain[data].dict())
         elif type == "getheight":
             self.message("height", self.chain.chain[-1].height)
@@ -42,11 +47,12 @@ class Network(p2pbase.Node):
         try:
             new = Block(self.chain.chain[-1], b)
         except:
+            print("AAAA")
             return
         if not new.valid():
             return False
         if new not in self.chain.chain:
-            self.chain.chain.append(new)
+            self.chain.add_block(new)
 
     def new_tx(self, t):
         if type(t) != dict:

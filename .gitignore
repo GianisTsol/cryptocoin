@@ -4,3 +4,4 @@ __pycache__
 env/
 chain.json
 wallet.pem
+genesis_maker.py

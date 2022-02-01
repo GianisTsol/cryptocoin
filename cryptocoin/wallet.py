@@ -29,7 +29,7 @@ class Wallet:
             return False
         tx = Tx()
         tx.transfer(self.public, to, amount, fee)
-        tx.confirm(self.pivate)
+        tx.confirm(self.private)
         self.pending.append(tx)
         return True
 

@@ -30,7 +30,7 @@ class Miner:
             src={
                 "send": -1,
                 "amount": rew,
-                "recv": block.author,
+                "recv": self.address,
                 "fee": 0,
                 "sig": "",
                 "time": block.time,
@@ -66,12 +66,12 @@ class Miner:
         return_dict["res"] = res
 
     def mine(self):
-        block = Block(self.chain.chain[-1])
+        block = Block(prev=self.chain.chain[-1])
         block.height = block.prev.height + 1
         block.time = time.time()
         block.diff = self.calculate_diff(block)
-        block.author = self.address
-        block.txs = self.net.pending
+        block.txs = self.net.pending.copy()
+
         block.txs.append(self.coinbase_tx(block))
 
         header = block.header()
@@ -104,4 +104,5 @@ class Miner:
         block.hash = hash_result
         block.nonce = nonce
 
+        print(block.valid())
         return block

@@ -83,7 +83,6 @@ class Block:
         self.diff = 0
         self.time = 0
         self.version = VERSION
-        self.author = 0
 
         if src:
             self.load(src)
@@ -95,18 +94,17 @@ class Block:
             self.prev = s["prev"]
         self.nonce = s["nonce"]
         self.diff = s["diff"]
-        self.time = s["time"]
+        self.time = int(s["time"])
         self.version = s["version"]
-        self.author = s["author"]
 
         for i in s["txs"]:
             self.txs.append(Tx(i))
 
     def header(self):
-        return f"{self.prev}{self.version}{self.txs_hash()}{self.time}{self.diff}{self.author}{self.nonce}"
+        return f"{str(self.version).zfill(4)}{self.prev.hash}{self.txs_hash()}{str(self.time).zfill(10)}{str(self.diff).zfill(3)}{self.nonce}"
 
     def get_reward(self):
-        rew = math.floor(10 ** 4 - self.height / 11 ** 3)
+        rew = 1
         for i in self.txs:
             if i.send != -1:
                 rew += i.fee
@@ -114,9 +112,6 @@ class Block:
 
     def valid(self):
         header = self.header()
-
-        if not self.height == self.prev.height + 1:
-            return False
 
         if not self.hash == hashlib.sha256(header.encode()).hexdigest():
             print(f"HASH DOESNT MATH FOR BLOCK {self.height}")
@@ -132,7 +127,7 @@ class Block:
             if i.send == -1:
                 if not coinbase:
                     coinbase = True
-                    if not i.amount == self.get_reward() and i.fee == 0 and i.recv == self.author:
+                    if not i.amount == self.get_reward() and not i.fee == 0:
                         return False
                 else:
                     return False  # TOO MANY COINBASE TXS
@@ -154,9 +149,8 @@ class Block:
             "txs": [i.dict() for i in self.txs],
             "nonce": self.nonce,
             "diff": self.diff,
-            "time": self.time,
+            "time": int(self.time),
             "version": self.version,
-            "author": self.author,
         }
 
     def __str__(self):
