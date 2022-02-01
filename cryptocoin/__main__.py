@@ -21,7 +21,7 @@ while True:
         miner = Miner(chain, peer)
         miner.address = wallet.public
         new = miner.mine()
-        peer.message("block", new.dict())
+        peer.send_message("block", new.dict())
         chain.add_block(new)
         print(new.dict())
 
@@ -39,7 +39,7 @@ while True:
         print(chain.validate())
 
     if inp == "sync":
-        peer.message("getheight", chain.chain[-1].height)
+        peer.send_message("getheight", chain.chain[-1].height)
 
     if inp == "keygen":
         public, private = cf.generate_keys()

@@ -11,9 +11,10 @@ class Network(Node):
         self.height = len(chain.chain) - 1
 
     def on_connect(self, node):
-        self.message("height", self.chain.height)
+        self.send_message("height", self.chain.height)
 
     def on_message(self, d):
+        print(d)
         if "data" in d and "type" in d:
             data = d["data"]
             type = d["type"]
@@ -26,9 +27,9 @@ class Network(Node):
             self.new_tx(data)
         elif type == "sync":
             if 0 < data <= self.chain.chain[-1].height:
-                self.message("block", self.chain.chain[data].dict())
+                self.send_message("block", self.chain.chain[data].dict())
         elif type == "getheight":
-            self.message("height", self.chain.chain[-1].height)
+            self.send_message("height", self.chain.chain[-1].height)
         elif type == "height":
             if data > self.height:
                 try:
@@ -39,7 +40,7 @@ class Network(Node):
 
     def sync(self):
         for i in range(len(self.chain), self.height):
-            self.message("sync", i)
+            self.send_message("sync", i)
 
     def new_block(self, b):
         if type(b) != dict:
