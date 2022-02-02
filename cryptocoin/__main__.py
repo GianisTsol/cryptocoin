@@ -7,8 +7,7 @@ from . import crypto_funcs as cf
 chain = Chain()
 chain.load()
 
-peer = Network()
-peer.initialize(chain)
+peer = Network(chain)
 wallet = Wallet(chain, peer)
 wallet.load()
 
@@ -39,7 +38,7 @@ while True:
         print(chain.validate())
 
     if inp == "sync":
-        peer.send_message("getheight", chain.chain[-1].height)
+        peer.send_hsync()
 
     if inp == "keygen":
         public, private = cf.generate_keys()
@@ -51,8 +50,8 @@ while True:
         chain.save()
         print(chain.chain)
 
-    if "connect " in inp:
-        peer.connect_to(inp.replace("connect ", ""))
+    if "node " in inp:
+        peer.new_node(inp.replace("connect ", ""))
 
     if inp == "wallet":
         print(f"wallet: {wallet.address}")

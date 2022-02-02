@@ -1,68 +1,116 @@
-from pythonp2p import Node
-from .block import Block, Tx
+# from .block import Block, Tx
 import json
 import time
+import socket
+import threading
+
+EVENT = "e"
+EVENT = "t"
+CONTENT = "d"
+CONTENT = "c"
 
 
-class Network(Node):
-    def initialize(self, chain):
-        self.pending = []
+class Network:
+    def __init__(self, chain, port=65444):
+        super(Network, self)
         self.chain = chain
-        self.height = len(chain.chain) - 1
+        self.known = []
 
-    def on_connect(self, node):
-        self.send_message("height", self.chain.height)
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def on_message(self, d):
-        print(d)
-        if "data" in d and "type" in d:
-            data = d["data"]
-            type = d["type"]
-        else:
+        self.sock.bind(("", self.port))
+
+        self.recv_thread = threading.Thread(target=self.mainloop)
+        self.recv_thread.start()
+
+    def send(self, message, addr):
+        message = json.dumps(message).encode()
+        self.sock.sendto(message, addr)
+
+    def net_send(self, message):
+        for i in self.known:
+            self.send(message, i)
+
+    def mainloop(self):
+        new = self.sock.recvfrom(1024)
+        self.handle_msgs(new)
+
+    def handle_msgs(self, msg):
+        addr = msg[1]
+        raw = json.loads(msg[0].decode())
+
+        if type(raw) is not dict:
             return
-        if type == "block":
-            print("BLOCK")
-            self.new_block(data)
-        elif type == "tx":
-            self.new_tx(data)
-        elif type == "sync":
-            if 0 < data <= self.chain.chain[-1].height:
-                self.send_message("block", self.chain.chain[data].dict())
-        elif type == "getheight":
-            self.send_message("height", self.chain.chain[-1].height)
-        elif type == "height":
-            if data > self.height:
-                try:
-                    self.height = int(data)
-                except ValueError:
-                    return
-                self.sync()
-
-    def sync(self):
-        for i in range(len(self.chain), self.height):
-            self.send_message("sync", i)
-
-    def new_block(self, b):
-        if type(b) != dict:
-            return
-        try:
-            new = Block(self.chain.chain[-1], b)
-        except:
-            print("AAAA")
-            return
-        if not new.valid():
-            return False
-        if new not in self.chain.chain:
-            self.chain.add_block(new)
-
-    def new_tx(self, t):
-        if type(t) != dict:
-            return
-        try:
-            new = Tx(t)
-        except:
+        if EVENT not in raw and CONTENT not in raw:
             return
 
-        if not new.valid():
-            return False
-        self.pending.append(new)
+        event = raw[EVENT]
+        data = raw[CONTENT]
+
+        event_map = {
+            "block": self.net_block,
+            "tx": self.net_tx,
+            "sync": self.net_sync,
+            "height": self.net_height,
+            "hsync": self.net_hsync,
+            "peers": self.net_peers,
+            "pulse": self.net_pulse,
+            "beat": self.net_beat,
+        }
+
+        if event in event_map:
+            event_map[event](data, addr)
+
+    def send_peers(self):
+        self.net_send({EVENT: "sync", CONTENT: self.known})
+
+    def send_sync(self, height):
+        self.net_send({EVENT: "sync", CONTENT: height})
+
+    def send_hsync(self):
+        self.net_send({EVENT: "hsync", CONTENT: ""})
+
+    def send_pulse(self, addr):
+        self.send({EVENT: "pulse", CONTENT: ""}, addr)
+
+    def net_beat(self, data, addr):
+        if addr in self.waiting:
+            self.known.append(addr)
+
+    def net_pulse(self, data, addr):
+        if addr not in self.known:
+            self.known.append(addr)
+        self.send({EVENT: "beat", CONTENT: ""}, addr)
+
+    def net_peers(self, data, addr):
+        if type(data) is not list:
+            return
+        for i in data:
+            if type(i) is not tuple:
+                return
+            if type(i[0]) is not str:
+                return
+            if type(i[1]) is not int:
+                return
+            self.known.append(i)
+
+    def net_block(self, data, addr):
+        # TODO: security, validation
+        if self.chain.get_block(data["height"]) is None:
+            self.chain.add_block(data)
+
+    def net_tx(self, data, addr):
+        # TODO add to miner pending
+        pass
+
+    def net_sync(self, data, addr):
+        self.send({EVENT: "block", CONTENT: self.chain.get_block(data)}, addr)
+
+    def net_height(self, data, addr):
+        if self.chain.height < data:
+            for i in range(data - self.chain.height):
+                self.send_sync(i)
+
+    def net_hsync(self, data, addr):
+        self.send({EVENT: "height", CONTENT: self.chain.height}, addr)

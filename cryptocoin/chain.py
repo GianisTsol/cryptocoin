@@ -40,6 +40,10 @@ class Chain:
                 return False
         return True
 
+    def get_block(self, index):
+        if index < self.height:
+            return self.chain[index]
+
     def add_block(self, block):
         if block.valid():
             self.height = block.height
