@@ -28,15 +28,16 @@ class Chain:
             json.dump(self.chain[1:], f, default=lambda x: x.dict())
 
     def validate(self, n=0):
-        prev = self.height
-        if n == 0:
+        prev = self.height + 1
+        if n == 0 or n > self.height:
             n = self.height
-        for i in self.chain[0:n:-1]:
+
+        for i in list(reversed(self.chain))[0:n:1]:
             prev -= 1
             if i.height != prev:
-                print("HEIGHT INCONSISTANCY CHAIN INVALID")
+                print(f"HEIGHT INCONSISTANCY CHAIN INVALID at block {prev}")
                 return False
-            if i.prev != self.chain[i - 1].hash:
+            if i.prev != self.chain[i.height - 1].hash:
                 print("HASH INCONSISTANCY CHAIN INVALID")
                 return False
             if not i.valid():

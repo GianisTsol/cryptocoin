@@ -22,7 +22,7 @@ class Network:
         # pending txs
         self.pending = []
 
-        self.addr = (socket.gethostname(), port)
+        self.addr = ("0.0.0.0", port)
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(1)
@@ -145,7 +145,9 @@ class Network:
 
     def net_block(self, data, addr):
         self.chain.add_block(data)
+        print(data)
         while not self.chain.validate(100):
+            print("AAAAAAA")
             self.chain.purge_block()
         self.send_hsync()
 
