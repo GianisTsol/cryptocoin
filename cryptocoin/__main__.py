@@ -11,8 +11,6 @@ peer = Network(chain)
 wallet = Wallet(chain, peer)
 wallet.load()
 
-# peer.start()
-
 while True:
     inp = input("> ")
 

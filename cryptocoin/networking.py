@@ -22,7 +22,7 @@ class Network:
         # pending txs
         self.pending = []
 
-        self.addr = ("127.0.0.1", port)
+        self.addr = (socket.gethostname(), port)
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setblocking(0)
