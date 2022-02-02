@@ -32,7 +32,7 @@ class Chain:
         if n == 0 or n > self.height:
             n = self.height
 
-        for i in list(reversed(self.chain))[0:n:1]:
+        for i in list(reversed(self.chain))[1:n:1]:
             prev -= 1
             if i.height != prev:
                 print(f"HEIGHT INCONSISTANCY CHAIN INVALID at block {prev}")
