@@ -22,6 +22,7 @@ class Miner:
         self.chain = chain
         self.net = network
         self.address = 0
+        self.flag = True
 
     def coinbase_tx(self, block):
         rew = block.get_reward()
@@ -42,11 +43,11 @@ class Miner:
         return tx
 
     def calculate_diff(self, block):
-        diff = block.prev.diff
+        diff = self.chain.get_block(-1).diff
 
         lastblocktime = BLOCK_TIME + 1
         if len(self.chain.chain) > 1:
-            lastblocktime = block.prev.time - block.prev.prev.time
+            lastblocktime = self.chain.get_block(-1).time - self.chain.get_block(-2).time
 
         if lastblocktime < BLOCK_TIME:
             diff += 1
@@ -59,6 +60,9 @@ class Miner:
 
         return ((i - 1) * NONCE_PER_THREAD, i * NONCE_PER_THREAD)
 
+    def reload(self):
+        self.flag = False
+
     @staticmethod
     def worker(*args):
         header, difficulty_bits, r, return_dict = args
@@ -66,8 +70,8 @@ class Miner:
         return_dict["res"] = res
 
     def mine(self):
-        block = Block(prev=self.chain.chain[-1])
-        block.height = block.prev.height + 1
+        block = Block()
+        block.height = self.chain.height + 1
         block.time = time.time()
         block.diff = self.calculate_diff(block)
         block.txs = self.net.pending.copy()
@@ -92,7 +96,9 @@ class Miner:
             threads.append(p)
 
         while "res" not in return_dict:
-            pass
+            if not self.flag:
+                return_dict["res"] = 0, 0
+                break  # in case new block is found, stop mining
 
         for i in threads:
             i.terminate()
@@ -104,5 +110,4 @@ class Miner:
         block.hash = hash_result
         block.nonce = nonce
 
-        print(block.valid())
         return block

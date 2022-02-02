@@ -73,11 +73,11 @@ class Tx:
 
 
 class Block:
-    def __init__(self, prev, src=None):
+    def __init__(self, src=None):
 
         self.height = 0
         self.hash = 0
-        self.prev = prev  # object of prev block
+        self.prev = ""
         self.txs = []
         self.nonce = ""
         self.diff = 0
@@ -90,8 +90,7 @@ class Block:
     def load(self, s):
         self.height = s["height"]
         self.hash = s["hash"]
-        if not self.prev:
-            self.prev = s["prev"]
+        self.prev = s["prev"]
         self.nonce = s["nonce"]
         self.diff = s["diff"]
         self.time = int(s["time"])
@@ -101,7 +100,7 @@ class Block:
             self.txs.append(Tx(i))
 
     def header(self):
-        return f"{str(self.version).zfill(4)}{self.prev.hash}{self.txs_hash()}{str(self.time).zfill(10)}{str(self.diff).zfill(3)}{self.nonce}"
+        return f"{str(self.version).zfill(4)}{self.prev}{self.txs_hash()}{str(self.time).zfill(10)}{str(self.diff).zfill(3)}{self.nonce}"
 
     def get_reward(self):
         rew = 1
@@ -114,7 +113,7 @@ class Block:
         header = self.header()
 
         if not self.hash == hashlib.sha256(header.encode()).hexdigest():
-            print(f"HASH DOESNT MATH FOR BLOCK {self.height}")
+            print(f"HASH DOESNT MATCH FOR BLOCK {self.height}")
             return False
 
         for i in self.txs:
@@ -145,7 +144,7 @@ class Block:
         return {
             "height": self.height,
             "hash": self.hash,
-            "prev": self.prev.hash,
+            "prev": self.prev,
             "txs": [i.dict() for i in self.txs],
             "nonce": self.nonce,
             "diff": self.diff,

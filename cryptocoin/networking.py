@@ -25,7 +25,7 @@ class Network:
         self.addr = (socket.gethostname(), port)
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setblocking(0)
+        self.sock.settimeout(1)
         self.sock.bind(self.addr)
 
         self.terminate_flag = threading.Event()
@@ -144,16 +144,17 @@ class Network:
             self.known.append(i)
 
     def net_block(self, data, addr):
-        # TODO: security, validation
-        if self.chain.get_block(data["height"]) is None:
-            self.chain.add_block(data)
+        self.chain.add_block(data)
+        while not self.chain.validate(100):
+            self.chain.purge_block()
+        self.send_hsync()
 
     def net_tx(self, data, addr):
         # TODO add to miner pending
         pass
 
     def net_sync(self, data, addr):
-        self.send({EVENT: "block", CONTENT: self.chain.get_block(data)}, addr)
+        self.send({EVENT: "block", CONTENT: self.chain.get_block(data).dict()}, addr)
 
     def net_height(self, data, addr):
         if self.chain.height < data:

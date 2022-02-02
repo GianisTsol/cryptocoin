@@ -14,26 +14,30 @@ class Chain:
         self.genesis()
 
     def genesis(self):
-        self.chain.append(Block(None, GENESIS))
+        self.chain.append(Block(GENESIS))
 
     def load(self):
         with open("chain.json", "r") as f:
             chain = json.load(f)
             for i in chain:
-                self.add_block(Block(self.chain[-1], i))
+                self.add_block(Block(i))
 
     def save(self):
         with open("chain.json", "w") as f:
             # dump all except genesis
             json.dump(self.chain[1:], f, default=lambda x: x.dict())
 
-    def validate(self):
-        prev = 0
-        # genesis block has no valid prev objand cause errors
-        for i in self.chain[1:]:
-            prev += 1
+    def validate(self, n=0):
+        prev = self.height
+        if n == 0:
+            n = self.height
+        for i in self.chain[0:n:-1]:
+            prev -= 1
             if i.height != prev:
                 print("HEIGHT INCONSISTANCY CHAIN INVALID")
+                return False
+            if i.prev != self.chain[i - 1].hash:
+                print("HASH INCONSISTANCY CHAIN INVALID")
                 return False
             if not i.valid():
                 print("BLOCK NOT VALID")
@@ -43,8 +47,24 @@ class Chain:
     def get_block(self, index):
         if index < self.height:
             return self.chain[index]
+        else:
+            return None
 
     def add_block(self, block):
+        if type(block) == dict:
+            block = Block(block)
+        elif type(block) == Block:
+            pass
+        else:
+            return
+
         if block.valid():
             self.height = block.height
             self.chain.append(block)
+            return True
+
+        return False
+
+    def purge_block(self):
+        self.chain.pop(-1)
+        self.height -= 1
