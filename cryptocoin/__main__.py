@@ -32,7 +32,7 @@ while True:
 
     if inp == "chain":
         print(chain.chain)
-        print(chain.validate())
+        chain.cleanup()
 
     if inp == "sync":
         peer.send_hsync()

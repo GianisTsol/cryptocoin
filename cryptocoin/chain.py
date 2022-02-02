@@ -31,12 +31,13 @@ class Chain:
     def height(self):
         return len(self.chain) - 1
 
-    def validate(self, n=0):
-        prev = self.height()
+    def validate(self, n=2):
         if n == 0 or n > self.height():
             n = self.height()
 
-        for i in list(reversed(self.chain))[1:n:1]:
+        chain = self.chain[1:]
+        prev = self.height() - n + 1
+        for i in chain[-n:]:
             if i.height != prev:
                 print(f"HEIGHT INCONSISTANCY CHAIN INVALID at block {prev}")
                 return False
@@ -46,7 +47,7 @@ class Chain:
             if not i.valid():
                 print("BLOCK NOT VALID")
                 return False
-            prev -= 1
+            prev += 1
         return True
 
     def cleanup(self):
