@@ -20,9 +20,8 @@ while True:
         miner = Miner(chain, peer)
         miner.address = wallet.public
         new = miner.mine()
-        peer.send_message("block", new.dict())
         chain.add_block(new)
-        print(new.dict())
+        peer.send_block(new.dict())
 
     if inp == "start":
         peer.start()

@@ -19,6 +19,9 @@ class Network:
         self.waiting = []
         self.sent = []
 
+        # pending txs
+        self.pending = []
+
         self.addr = ("127.0.0.1", port)
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,7 +37,7 @@ class Network:
         self.sock.sendto(message, addr)
 
     def net_send(self, message, exc=[]):
-        h = hashlib.md5(message).hexdigest()
+        h = hashlib.md5(json.dumps(message).encode()).hexdigest()
         if h in self.sent:
             return
         self.sent.append(h)
@@ -87,6 +90,12 @@ class Network:
             self.net_send(raw, exc=[addr, self.addr])
 
     # ############ SEND ################
+    def send_block(self, data):
+        self.net_send({EVENT: "block", CONTENT: data})
+
+    def send_tx(self, data):
+        self.net_send({EVENT: "tx", CONTENT: data})
+
     def send_peers(self, addr):
         self.send({EVENT: "peers", CONTENT: self.known}, addr)
 
