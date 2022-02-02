@@ -3,24 +3,29 @@ import json
 import time
 import socket
 import threading
+import hashlib
 
 EVENT = "e"
-EVENT = "t"
-CONTENT = "d"
 CONTENT = "c"
 
 
 class Network:
     def __init__(self, chain, port=65444):
         super(Network, self)
+        self.daemon = True
+
         self.chain = chain
         self.known = []
+        self.waiting = []
+        self.sent = []
 
-        self.port = port
+        self.addr = ("127.0.0.1", port)
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setblocking(0)
+        self.sock.bind(self.addr)
 
-        self.sock.bind(("", self.port))
-
+        self.terminate_flag = threading.Event()
         self.recv_thread = threading.Thread(target=self.mainloop)
         self.recv_thread.start()
 
@@ -28,13 +33,25 @@ class Network:
         message = json.dumps(message).encode()
         self.sock.sendto(message, addr)
 
-    def net_send(self, message):
+    def net_send(self, message, exc=[]):
+        h = hashlib.md5(message).hexdigest()
+        if h in self.sent:
+            return
+        self.sent.append(h)
         for i in self.known:
-            self.send(message, i)
+            if i not in exc:
+                self.send(message, i)
+
+    def stop(self):
+        self.terminate_flag.set()
 
     def mainloop(self):
-        new = self.sock.recvfrom(1024)
-        self.handle_msgs(new)
+        while not self.terminate_flag.is_set():
+            try:
+                new = self.sock.recvfrom(1024)
+                self.handle_msgs(new)
+            except socket.error:
+                pass
 
     def handle_msgs(self, msg):
         addr = msg[1]
@@ -55,15 +72,26 @@ class Network:
             "height": self.net_height,
             "hsync": self.net_hsync,
             "peers": self.net_peers,
+            "psync": self.net_psync,
             "pulse": self.net_pulse,
             "beat": self.net_beat,
         }
 
+        to_forward = ("block", "tx")
+
         if event in event_map:
             event_map[event](data, addr)
 
-    def send_peers(self):
-        self.net_send({EVENT: "sync", CONTENT: self.known})
+        # forward
+        if event in to_forward:
+            self.net_send(raw, exc=[addr, self.addr])
+
+    # ############ SEND ################
+    def send_peers(self, addr):
+        self.send({EVENT: "peers", CONTENT: self.known}, addr)
+
+    def send_psync(self, addr):
+        self.send({EVENT: "psync", CONTENT: ""}, addr)
 
     def send_sync(self, height):
         self.net_send({EVENT: "sync", CONTENT: height})
@@ -72,7 +100,13 @@ class Network:
         self.net_send({EVENT: "hsync", CONTENT: ""})
 
     def send_pulse(self, addr):
+        if addr not in self.waiting:
+            self.waiting.append(addr)
         self.send({EVENT: "pulse", CONTENT: ""}, addr)
+
+    # ############ RECEIVE #############
+    def net_psync(self, data, addr):
+        self.send_peers(addr)
 
     def net_beat(self, data, addr):
         if addr in self.waiting:
@@ -82,6 +116,7 @@ class Network:
         if addr not in self.known:
             self.known.append(addr)
         self.send({EVENT: "beat", CONTENT: ""}, addr)
+        self.send_peers(addr)
 
     def net_peers(self, data, addr):
         if type(data) is not list:

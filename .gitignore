@@ -5,3 +5,4 @@ env/
 chain.json
 wallet.pem
 genesis_maker.py
+test.py
