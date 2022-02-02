@@ -33,7 +33,6 @@ class Network:
         self.recv_thread.start()
 
     def send(self, message, addr):
-        print(addr)
         try:
             message = json.dumps(message).encode()
             self.sock.sendto(message, addr)
@@ -41,10 +40,6 @@ class Network:
             print("error" + str(e))
 
     def net_send(self, message, exc=[]):
-        h = hashlib.md5(json.dumps(message).encode()).hexdigest()
-        if h in self.sent:
-            return
-        self.sent.append(h)
         for i in self.known:
             if i not in exc:
                 self.send(message, i)
@@ -91,6 +86,10 @@ class Network:
 
         # forward
         if event in to_forward:
+            h = hashlib.md5(json.dumps(message).encode()).hexdigest()
+            if h in self.sent:
+                return
+            self.sent.append(h)
             self.net_send(raw, exc=[addr, self.addr])
 
     # ############ SEND ################
@@ -157,7 +156,7 @@ class Network:
 
     def net_height(self, data, addr):
         if self.chain.height() < data:
-            for i in range(data, self.chain.height()):
+            for i in range(self.chain.height(), data):
                 self.send_sync(i)
 
     def net_hsync(self, data, addr):

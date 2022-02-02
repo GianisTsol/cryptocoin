@@ -54,6 +54,7 @@ class Chain:
         while not self.validate(100):
             print("PURGING...")
             self.purge_block()
+            self.purge_block()
 
     def get_block(self, index):
         if index < self.height():
@@ -77,4 +78,5 @@ class Chain:
         return False
 
     def purge_block(self):
-        self.chain.pop(-1)
+        if self.height() > 0:
+            self.chain.pop(-1)
