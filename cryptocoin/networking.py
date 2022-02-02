@@ -86,7 +86,7 @@ class Network:
 
         # forward
         if event in to_forward:
-            h = hashlib.md5(json.dumps(message).encode()).hexdigest()
+            h = hashlib.md5(json.dumps(raw).encode()).hexdigest()
             if h in self.sent:
                 return
             self.sent.append(h)
