@@ -50,7 +50,7 @@ while True:
         print(chain.chain)
 
     if "node " in inp:
-        peer.new_node(inp.replace("connect ", ""))
+        peer.send_pulse((inp.replace("node ", ""), 65444))
 
     if inp == "wallet":
         print(f"wallet: {wallet.address}")

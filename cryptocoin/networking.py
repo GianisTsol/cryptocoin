@@ -33,8 +33,12 @@ class Network:
         self.recv_thread.start()
 
     def send(self, message, addr):
-        message = json.dumps(message).encode()
-        self.sock.sendto(message, addr)
+        print(addr)
+        try:
+            message = json.dumps(message).encode()
+            self.sock.sendto(message, addr)
+        except socket.error as e:
+            print("error" + str(e))
 
     def net_send(self, message, exc=[]):
         h = hashlib.md5(json.dumps(message).encode()).hexdigest()
