@@ -147,7 +147,6 @@ class Network:
         self.chain.add_block(data)
         print(data)
         while not self.chain.validate(100):
-            print("AAAAAAA")
             self.chain.purge_block()
         self.send_hsync()
 
@@ -160,7 +159,7 @@ class Network:
 
     def net_height(self, data, addr):
         if self.chain.height < data:
-            for i in range(data - self.chain.height):
+            for i in range(data, self.chain.height):
                 self.send_sync(i)
 
     def net_hsync(self, data, addr):
