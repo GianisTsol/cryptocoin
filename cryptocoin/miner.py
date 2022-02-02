@@ -72,7 +72,7 @@ class Miner:
     def mine(self):
         block = Block()
         block.prev = self.chain.chain[-1].hash
-        block.height = self.chain.height + 1
+        block.height = self.chain.height() + 1
         block.time = int(time.time())
         block.diff = self.calculate_diff(block)
         block.txs = self.net.pending.copy()

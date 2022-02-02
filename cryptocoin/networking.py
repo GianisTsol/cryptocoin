@@ -145,9 +145,7 @@ class Network:
 
     def net_block(self, data, addr):
         self.chain.add_block(data)
-        print(data)
-        while not self.chain.validate(100):
-            self.chain.purge_block()
+        self.chain.cleanup()
         self.send_hsync()
 
     def net_tx(self, data, addr):
@@ -158,9 +156,9 @@ class Network:
         self.send({EVENT: "block", CONTENT: self.chain.get_block(data).dict()}, addr)
 
     def net_height(self, data, addr):
-        if self.chain.height < data:
-            for i in range(data, self.chain.height):
+        if self.chain.height() < data:
+            for i in range(data, self.chain.height()):
                 self.send_sync(i)
 
     def net_hsync(self, data, addr):
-        self.send({EVENT: "height", CONTENT: self.chain.height}, addr)
+        self.send({EVENT: "height", CONTENT: self.chain.height()}, addr)
