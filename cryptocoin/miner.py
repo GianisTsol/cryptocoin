@@ -4,6 +4,7 @@ import time
 import hashlib
 import threading
 import multiprocessing as mp
+from . import crypto_funcs as cf
 
 
 def proof_of_work(header, difficulty_bits, r=(0, MAX_NONCE)):
@@ -33,6 +34,7 @@ class Miner:
                 "amount": rew,
                 "recv": self.address,
                 "fee": 0,
+                "key": "",
                 "sig": "",
                 "time": block.time,
                 "hash": 0,
@@ -70,12 +72,13 @@ class Miner:
         return_dict["res"] = res
 
     def mine(self):
+        txs = [i for i in self.net.pending.copy() if i.mine_valid(self.chain.chain)]
         block = Block()
         block.prev = self.chain.chain[-1].hash
         block.height = self.chain.height() + 1
         block.time = int(time.time())
         block.diff = self.calculate_diff(block)
-        block.txs = self.net.pending.copy()
+        block.txs = txs
 
         block.txs.append(self.coinbase_tx(block))
 

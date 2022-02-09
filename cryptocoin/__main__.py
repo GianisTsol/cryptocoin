@@ -3,11 +3,12 @@ from .networking import Network
 from .wallet import Wallet
 from .miner import Miner
 from . import crypto_funcs as cf
+import random
 
 chain = Chain()
 chain.load()
 
-peer = Network(chain)
+peer = Network(chain, port=random.randint(65400, 65499))
 wallet = Wallet(chain, peer)
 wallet.load()
 
@@ -21,11 +22,11 @@ while True:
         chain.add_block(new)
         peer.send_block(new.dict())
 
-    if inp == "start":
-        peer.start()
-
     if inp == "stop":
         peer.stop()
+
+    if inp == "addr":
+        print(peer.addr)
 
     if inp == "save":
         chain.save()
@@ -41,18 +42,21 @@ while True:
         public, private = cf.generate_keys()
         wallet.public = public
         wallet.private = private
-        wallet.save()
+        wallet.calc()
+        # wallet.save()
 
     if inp == "save":
         chain.save()
         print(chain.chain)
 
     if "node " in inp:
-        peer.send_pulse((inp.replace("node ", ""), 65444))
+        inp = inp.replace("node ", "")
+        ip, port = inp.split(":")
+        peer.send_pulse((ip, int(port)))
 
     if inp == "wallet":
         print(f"wallet: {wallet.address}")
-        print(f"balance: {wallet.get_balance(wallet.public)/1000} Coins")
+        print(f"balance: {wallet.get_balance(wallet.public)} Coins")
 
     if inp == "tx":
         to = input("reciever: ")

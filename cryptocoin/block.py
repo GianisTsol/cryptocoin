@@ -1,16 +1,19 @@
 from .globals import *
 import hashlib
 import math
+import base64
+from . import crypto_funcs as cf
 
 
 class Tx:
     def __init__(self, src=None):
-        self.send = 0  # wallet address of sender/reciever
+        self.send = ""  # wallet address of sender
         self.amount = 0
         self.fee = 0
-        self.recv = 0  # in/out, 0,1
-        self.sig = 0  # hash signed w send key
-        self.hash = 0  # HASH IN INT 16
+        self.recv = ""  # wallet address of reciever
+        self.key = ""
+        self.sig = ""  # hash signed w send key
+        self.hash = ""  # HASH IN INT 16
         self.time = 0
 
         if src:
@@ -21,6 +24,7 @@ class Tx:
         self.amount = s["amount"]
         self.fee = s["fee"]
         self.recv = s["recv"]
+        self.key = s["key"]
         self.sig = s["sig"]
         self.hash = s["hash"]
         self.time = s["time"]
@@ -30,16 +34,38 @@ class Tx:
 
     def calculate_hash(self):
         digest = self.header().encode()
-        return hashlib.sha256(digest).hexdigest()
+        return base64.b64encode(hashlib.sha256(digest).digest()).decode()
+
+    def mine_valid(self, chain):
+        if not self.time < chain[-10].time:
+            return False
+
+        balance = 0
+        for i in chain:
+            for j in i.txs:
+                if j.hash == self.hash:
+                    return False
+                if j.recv == wallet:
+                    balance += j.amount - j.fee
+        if balance > self.amount:
+            return True
 
     def valid(self):
         # dont check sig on coinbase
         if self.send == -1:
             signed = True
+            addr = True
         else:
-            signed = cf.verify(self.sig, self.send)
+            signed = cf.verify(self.hash, self.sig, self.key)
+            addr = self.send == hashlib.sha256(self.key.encode()).hexdigest()
 
-        return self.hash == self.calculate_hash() and self.amount >= self.fee and signed
+        checks = [
+            self.hash == self.calculate_hash(),
+            self.amount >= self.fee,
+            signed,
+            addr,
+        ]
+        return all(checks)
 
     def transfer(self, send, to, amount, fee):
         self.send = send
@@ -58,6 +84,7 @@ class Tx:
         return {
             "send": self.send,
             "recv": self.recv,
+            "key": self.key,
             "amount": self.amount,
             "fee": self.fee,
             "sig": self.sig,

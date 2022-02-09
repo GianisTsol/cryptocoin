@@ -29,17 +29,17 @@ class Chain:
             json.dump(self.chain[1:], f, default=lambda x: x.dict())
 
     def height(self):
-        return len(self.chain) - 1
+        return self.chain[-1].height
 
     def validate(self, n=2):
         if n == 0 or n > self.height():
             n = self.height()
 
         chain = self.chain[1:]
-        prev = self.height() - n + 1
-        for i in chain[-n:]:
+        prev = 1
+        for i in chain:
             if i.height != prev:
-                print(f"HEIGHT INCONSISTANCY CHAIN INVALID at block {prev}")
+                print(f"HEIGHT INCONSISTANCY CHAIN INVALID at block {prev} - {i.height}")
                 return False
             if i.prev != self.chain[i.height - 1].hash:
                 print("HASH INCONSISTANCY CHAIN INVALID")
@@ -54,10 +54,9 @@ class Chain:
         while not self.validate(100):
             print("PURGING...")
             self.purge_block()
-            self.purge_block()
 
     def get_block(self, index):
-        if index < self.height():
+        if index <= self.height():
             return self.chain[index]
         else:
             return None
@@ -71,12 +70,14 @@ class Chain:
             return
 
         if block.valid():
-            self.chain.append(block)
+            if block.height == self.chain[-1].height + 1:
+                self.chain.append(block)
 
-        self.cleanup()  # make usre all is well and if not fix it
-
-        return False
+        # self.cleanup()  # make usre all is well and if not fix it
 
     def purge_block(self):
         if self.height() > 0:
+            new = len(self.chain)
             self.chain.pop(-1)
+            if len(self.chain) == new:
+                print("TDFFFFF")

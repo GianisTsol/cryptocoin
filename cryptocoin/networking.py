@@ -1,4 +1,4 @@
-# from .block import Block, Tx
+from .block import Block, Tx
 import json
 import time
 import socket
@@ -33,11 +33,12 @@ class Network:
         self.recv_thread.start()
 
     def send(self, message, addr):
+        print(message)
         try:
             message = json.dumps(message).encode()
             self.sock.sendto(message, addr)
         except socket.error as e:
-            print("error" + str(e))
+            print("error " + str(e))
 
     def net_send(self, message, exc=[]):
         for i in self.known:
@@ -144,19 +145,21 @@ class Network:
 
     def net_block(self, data, addr):
         self.chain.add_block(data)
-        self.chain.cleanup()
-        self.send_hsync()
 
     def net_tx(self, data, addr):
-        # TODO add to miner pending
-        pass
+        tx = Tx(data)
+        if not tx.valid():
+            return
+        if tx not in self.pending:
+            self.pending.append(tx)
 
     def net_sync(self, data, addr):
-        self.send({EVENT: "block", CONTENT: self.chain.get_block(data).dict()}, addr)
+        if self.chain.get_block(data) is not None:
+            self.send({EVENT: "block", CONTENT: self.chain.get_block(data).dict()}, addr)
 
     def net_height(self, data, addr):
         if self.chain.height() < data:
-            for i in range(self.chain.height(), data):
+            for i in range(self.chain.height() + 1, data + 1):
                 self.send_sync(i)
 
     def net_hsync(self, data, addr):

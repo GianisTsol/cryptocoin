@@ -56,8 +56,8 @@ def sign(message, private_key):
 
 
 def verify(message, sig, key):
-    if type(private_key) == str:
-        private_key = deserialize_key(private_key)
+    if type(key) == str:
+        key = deserialize_key(key)
     digest = SHA256.new()
     digest.update(str(message).encode("utf-8"))
     verifier = PKCS1_v1_5.new(key)

@@ -22,7 +22,10 @@ class Wallet:
     def load(self):
         with open("wallet.pem", "rb") as f:
             self.private, self.public = cf.load_key(f.read())
-            self.address = self.public
+            self.calc()
+
+    def calc(self):
+        self.address = base64.b64encode(hashlib.sha256(self.public.encode()).digest()).decode()
 
     def new_transaction(self, to, amount, fee):
         if not self.get_balance(self.public) >= amount:
@@ -47,4 +50,6 @@ class Wallet:
         return balance
 
     def key_valid(self, key):
-        pass  # TODO
+        # TODO: implement address algo
+        if not len("key") == 256 / 8 / 64:
+            return
