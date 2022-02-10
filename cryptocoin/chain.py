@@ -11,6 +11,7 @@ class Chain:
     def __init__(self):
         self.chain = []
         self.genesis()
+        self.blockbuffer = {}
 
     def genesis(self):
         self.chain.append(Block(GENESIS))
@@ -51,7 +52,7 @@ class Chain:
         return True
 
     def cleanup(self):
-        while not self.validate(100):
+        while not self.validate():
             print("PURGING...")
             self.purge_block()
 
@@ -71,9 +72,25 @@ class Chain:
 
         if block.valid():
             if block.height == self.chain[-1].height + 1:
-                self.chain.append(block)
+                if block.prev == self.chain[-1].hash:
+                    self.chain.append(block)
+                    if block.height in self.blockbuffer:
+                        self.blockbuffer.remove(block.height)
+                    try:
+                        self.add_block(self.blockbuffer[block.height + 1])
+                    except KeyError:
+                        pass
+                    return True
+                else:
+                    self.purge_block()
+                    return False
+            elif block.height > self.self.chain[-1].height + 1:
+                if block.height - 1 in self.blockbuffer:
+                    self.add_block(self.blockbuffer[block.height - 1])
+                    self.add_block(block)
+                self.blockbuffer[block.height] = block
 
-        # self.cleanup()  # make usre all is well and if not fix it
+        return False
 
     def purge_block(self):
         if self.height() > 0:

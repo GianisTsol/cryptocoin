@@ -7,6 +7,9 @@ from . import crypto_funcs as cf
 
 class Tx:
     def __init__(self, src=None):
+
+        self.KEYS = ["send", "amount", "fee", "recv", "key", "sig", "hash", "time"]
+
         self.send = ""  # wallet address of sender
         self.amount = 0
         self.fee = 0
@@ -20,6 +23,11 @@ class Tx:
             self.load(src)
 
     def load(self, s):
+
+        if not set(self.KEYS).issubset(s.keys()):
+            print("ERROR LOADING TX")
+            return
+
         self.send = s["send"]
         self.amount = s["amount"]
         self.fee = s["fee"]
@@ -102,6 +110,8 @@ class Tx:
 class Block:
     def __init__(self, src=None):
 
+        self.KEYS = ["height", "hash", "prev", "nonce", "diff", "time", "version"]
+
         self.height = 0
         self.hash = 0
         self.prev = ""
@@ -115,6 +125,10 @@ class Block:
             self.load(src)
 
     def load(self, s):
+        if not set(self.KEYS).issubset(s.keys()):
+            print("ERROR LOADING TX")
+            return
+
         self.height = s["height"]
         self.hash = s["hash"]
         self.prev = s["prev"]
