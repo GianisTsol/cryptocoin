@@ -3,6 +3,7 @@ import hashlib
 import math
 import base64
 from . import crypto_funcs as cf
+from . import common_funcs
 
 
 class Tx:
@@ -45,18 +46,26 @@ class Tx:
         return base64.b64encode(hashlib.sha256(digest).digest()).decode()
 
     def mine_valid(self, chain):
-        if not self.time < chain[-10].time:
+        if self.time < chain[-1].time:
+            print("Invalid time")
             return False
 
         balance = 0
+        wallet = self.send
         for i in chain:
             for j in i.txs:
                 if j.hash == self.hash:
                     return False
                 if j.recv == wallet:
                     balance += j.amount - j.fee
-        if balance > self.amount:
-            return True
+                if j.send == wallet:
+                    balance -= j.amount
+        if balance < self.amount:
+            print("Invalid balance")
+            return False
+
+        print("Passed")
+        return True
 
     def valid(self):
         # dont check sig on coinbase
@@ -65,7 +74,7 @@ class Tx:
             addr = True
         else:
             signed = cf.verify(self.hash, self.sig, self.key)
-            addr = self.send == hashlib.sha256(self.key.encode()).hexdigest()
+            addr = self.send == common_funcs.public_to_address(self.key)
 
         checks = [
             self.hash == self.calculate_hash(),
@@ -75,7 +84,8 @@ class Tx:
         ]
         return all(checks)
 
-    def transfer(self, send, to, amount, fee):
+    def transfer(self, key, send, to, amount, fee):
+        self.key = key
         self.send = send
         self.to = to
         self.amount = amount

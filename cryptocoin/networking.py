@@ -29,16 +29,32 @@ class Network:
         self.sock.bind(self.addr)
 
         self.terminate_flag = threading.Event()
+
         self.recv_thread = threading.Thread(target=self.mainloop)
         self.recv_thread.start()
 
+        self.pinger_thread = threading.Thread(target=self.pinger)
+        self.pinger_thread.start()
+
+        self.send_blocked = False
+
+    def add_node(self, node):
+        if node not in self.known:
+            self.known.append(node)
+            return True
+        return False
+
     def send(self, message, addr):
-        print(message)
+        while self.send_blocked:
+            pass
+        self.send_blocked = True
         try:
             message = json.dumps(message).encode()
             self.sock.sendto(message, addr)
         except socket.error as e:
             print("error " + str(e))
+        finally:
+            self.send_blocked = False
 
     def net_send(self, message, exc=[]):
         for i in self.known:
@@ -123,13 +139,13 @@ class Network:
 
     def net_beat(self, data, addr):
         if addr in self.waiting:
-            self.known.append(addr)
+            self.add_node(addr)
 
     def net_pulse(self, data, addr):
-        if addr not in self.known:
-            self.known.append(addr)
         self.send({EVENT: "beat", CONTENT: ""}, addr)
-        self.send_peers(addr)
+
+        if self.add_node(addr):
+            self.send_peers(addr)
 
     def net_peers(self, data, addr):
         if type(data) is not list:
@@ -141,7 +157,7 @@ class Network:
                 return
             if type(i[1]) is not int:
                 return
-            self.known.append(i)
+            self.add_node(addr)
 
     def net_block(self, data, addr):
         self.chain.add_block(data)
@@ -149,8 +165,10 @@ class Network:
     def net_tx(self, data, addr):
         tx = Tx(data)
         if not tx.valid():
+            print("Received invalid tx")
             return
         if tx not in self.pending:
+            print("new tx")
             self.pending.append(tx)
 
     def net_sync(self, data, addr):
@@ -164,3 +182,9 @@ class Network:
 
     def net_hsync(self, data, addr):
         self.send({EVENT: "height", CONTENT: self.chain.height()}, addr)
+
+    def pinger(self):
+        while not self.terminate_flag.is_set():
+            time.sleep(2)
+            for i in self.known.copy():
+                self.send_pulse(i)

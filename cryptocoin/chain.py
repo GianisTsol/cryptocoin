@@ -75,7 +75,7 @@ class Chain:
                 if block.prev == self.chain[-1].hash:
                     self.chain.append(block)
                     if block.height in self.blockbuffer:
-                        self.blockbuffer.remove(block.height)
+                        self.blockbuffer.pop(block.height)
                     try:
                         self.add_block(self.blockbuffer[block.height + 1])
                     except KeyError:
@@ -84,7 +84,7 @@ class Chain:
                 else:
                     self.purge_block()
                     return False
-            elif block.height > self.self.chain[-1].height + 1:
+            elif block.height > self.chain[-1].height + 1:
                 if block.height - 1 in self.blockbuffer:
                     self.add_block(self.blockbuffer[block.height - 1])
                     self.add_block(block)

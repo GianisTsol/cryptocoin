@@ -17,9 +17,10 @@ while True:
 
     if inp == "mine":
         miner = Miner(chain, peer)
-        miner.address = wallet.public
+        miner.address = wallet.address
         new = miner.mine()
         chain.add_block(new)
+        new.dict()
         peer.send_block(new.dict())
 
     if inp == "stop":
@@ -56,14 +57,14 @@ while True:
 
     if inp == "wallet":
         print(f"wallet: {wallet.address}")
-        print(f"balance: {wallet.get_balance(wallet.public)} Coins")
+        print(f"balance: {wallet.get_balance(wallet.address)} Coins")
 
     if inp == "tx":
         to = input("reciever: ")
         try:
             amount = int(input("Amount (/1000): "))
+            fee = int(input("Fee: "))
+            wallet.new_transaction(to, amount, fee)
+            wallet.publish_txs()
         except ValueError:
-            print("invalid amount ;)")
-        fee = int(input("Fee: "))
-        wallet.new_transaction(to, amount, fee)
-        wallet.publish_txs()
+            print("error")
