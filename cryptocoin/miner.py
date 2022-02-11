@@ -79,7 +79,6 @@ class Miner:
         block.time = int(time.time())
         block.diff = self.calculate_diff(block)
         block.txs = txs
-        print(txs)
 
         block.txs.append(self.coinbase_tx(block))
 

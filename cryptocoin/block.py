@@ -88,7 +88,7 @@ class Tx:
     def transfer(self, key, send, to, amount, fee):
         self.key = key
         self.send = send
-        self.to = to
+        self.recv = to
         self.amount = amount
         self.fee = fee
 
