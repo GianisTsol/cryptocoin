@@ -4,6 +4,7 @@ import math
 import base64
 from . import crypto_funcs as cf
 from . import common_funcs
+import time
 
 
 class Tx:
@@ -92,6 +93,7 @@ class Tx:
         self.fee = fee
 
     def confirm(self, private_key):
+        self.time = time.time()
         self.hash = self.calculate_hash()
         self.sig = cf.sign(self.hash, private_key)
 
