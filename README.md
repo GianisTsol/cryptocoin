@@ -43,7 +43,7 @@ Example:
  # Create a new node listening on a specific port
  my_node = Node(host="localhost", port=65432)
  my_node.start()  # Start the node
-
+```
 Nodes will automatically ping peers to check for connectivity and propagate messages across the network.
 
 2. Transactions and Blocks
@@ -63,7 +63,7 @@ Example for creating a transaction:
  # Validate the transaction
  if transaction.valid():
      print("Transaction is valid")
-
+```
 Blocks can contain multiple transactions and are used to build the chain. They connect to the previous block via hashes, ensuring chain integrity.
 
 3. Peer Communication
@@ -73,7 +73,7 @@ Each node can connect to other peers via the connect_to() method. This allows no
 Example for connecting to a peer:
  ```python
  my_node.connect_to("192.168.1.2", 65432)
-
+```
 4. Saving and Loading State
 
 The node’s peer list can be saved and loaded from a file. This allows nodes to reconnect to previous peers on restart.
@@ -81,7 +81,8 @@ The node’s peer list can be saved and loaded from a file. This allows nodes to
 Save state:
  ```python
  my_node.savestate("state.json")
-
+ ```
 Load state:
  ```python
  my_node.loadstate("state.json")
+ ```
