@@ -27,8 +27,8 @@ Cloning the Repository
 
 Clone this repository to your local machine:
 
-git clone https://github.com/GianisTsol/cryptocoin.git
-cd cryptocoin
+ git clone https://github.com/GianisTsol/cryptocoin.git
+ cd cryptocoin
 
 Usage
 
@@ -38,11 +38,11 @@ To start a node, you can use the Node class. Each node communicates with peers o
 
 Example:
 
-fĺrom cryptocoin.node import Node
+ from cryptocoin.node import Node
 
-# Create a new node listening on a specific port
-my_node = Node(host="localhost", port=65432)
-my_node.start()  # Start the node
+ # Create a new node listening on a specific port
+ my_node = Node(host="localhost", port=65432)
+ my_node.start()  # Start the node
 
 Nodes will automatically ping peers to check for connectivity and propagate messages across the network.
 
