@@ -1,8 +1,3 @@
-Here's a comprehensive README.md file based on the code you provided for the cryptocurrency system and P2P node network:
-
-
----
-
 CryptoCoin - A Simplified Cryptocurrency & P2P Network
 
 CryptoCoin is a decentralized cryptocurrency built using Python. This project includes a peer-to-peer (P2P) network, transaction handling, and block validation. The core functionalities cover basic transaction creation, signing, hashing, and validation, as well as node communication over a P2P network.
