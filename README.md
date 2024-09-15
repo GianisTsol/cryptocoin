@@ -26,7 +26,7 @@
 Cloning the Repository
 
 Clone this repository to your local machine:
-
+ ```bash
  git clone https://github.com/GianisTsol/cryptocoin.git
  cd cryptocoin
 
@@ -37,7 +37,7 @@ Usage
 To start a node, you can use the Node class. Each node communicates with peers over a P2P network using sockets.
 
 Example:
-
+ ```python
  from cryptocoin.node import Node
 
  # Create a new node listening on a specific port
@@ -51,7 +51,7 @@ Nodes will automatically ping peers to check for connectivity and propagate mess
 The core of the blockchain is built around Tx (Transaction) and Block classes.
 
 Example for creating a transaction:
-
+ ```python
  from cryptocoin.tx import Tx
 
  # Create a transaction object
@@ -71,7 +71,7 @@ Blocks can contain multiple transactions and are used to build the chain. They c
 Each node can connect to other peers via the connect_to() method. This allows nodes to exchange messages such as transactions, blocks, and peer lists.
 
 Example for connecting to a peer:
-
+ ```python
  my_node.connect_to("192.168.1.2", 65432)
 
 4. Saving and Loading State
@@ -79,9 +79,9 @@ Example for connecting to a peer:
 The node’s peer list can be saved and loaded from a file. This allows nodes to reconnect to previous peers on restart.
 
 Save state:
-
+ ```python
  my_node.savestate("state.json")
 
 Load state:
-
+ ```python
  my_node.loadstate("state.json")
